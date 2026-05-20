@@ -1,0 +1,32 @@
+# cargo-audit configuration. Keep in sync with the `[advisories.ignore]`
+# list in `deny.toml`. Audit these quarterly and remove the moment an
+# upgrade path lands; each entry must point to the upstream issue tracking
+# the fix.
+[advisories]
+ignore = [
+    # rsa 0.9 — Marvin Attack (timing sidechannel). No fix available
+    # upstream; the RustCrypto/RSA team is still migrating to a
+    # constant-time bignum. The `rsa` crate is pulled in only for
+    # key-format parsing/serialization (PKCS#1 / PKCS#8); all
+    # attacker-observable RSA decrypt/sign paths run through aws-lc-rs.
+    # Tracker: https://github.com/RustCrypto/RSA/issues/626
+    "RUSTSEC-2023-0071",
+
+    # rustls-pemfile 2.x — unmaintained wrapper around rustls-pki-types
+    # PEM parsing. Migration is scheduled with the rustls 0.24 bump.
+    # Tracker: https://github.com/rustls/pemfile/issues/61
+    "RUSTSEC-2025-0134",
+
+    # paste 1.0.15 — unmaintained build-time proc-macro pulled in
+    # transitively via `cryptoki` (canonical PKCS#11 binding). No runtime
+    # surface; we accept until cryptoki migrates to `pastey`/`with_builtin_macros`.
+    # Tracker: https://github.com/dtolnay/paste
+    "RUSTSEC-2024-0436",
+
+    # rand 0.8.x — ThreadRng reseed-during-custom-logger soundness window.
+    # Mitigation: this workspace's tracing/log setup never invokes
+    # `rand::rng()` from inside a `log::Logger`, so the unsound interaction
+    # is unreachable. rand-0.9 migration tracked in [SUPPLY_CHAIN.md].
+    # Tracker: https://github.com/rust-random/rand/pull/1763
+    "RUSTSEC-2026-0097",
+]

@@ -1,0 +1,230 @@
+[advisories]
+version = 2
+unmaintained = "all"
+yanked = "warn"
+
+# Justified ignores. Audit these quarterly and remove the moment an upgrade
+# path lands. Each entry must point to the upstream issue tracking the fix.
+ignore = [
+    # rsa 0.9 — Marvin Attack (timing sidechannel). No fix available upstream;
+    # the RustCrypto/RSA team is still migrating to constant-time bignum.
+    # Mitigation: the enterprise HSM build does NOT use the `rsa` crate for
+    # any operation that processes attacker-controlled ciphertexts over a
+    # network — RSA decrypt/sign in production runs through aws-lc-rs
+    # (FIPS-validated, constant-time). The `rsa` crate is pulled in only for
+    # key-format parsing/serialization (PKCS#1 / PKCS#8), where timing of
+    # local-only computations is not observable to a remote attacker.
+    # Tracker: https://github.com/RustCrypto/RSA/issues/626
+    "RUSTSEC-2023-0071",
+
+    # rustls-pemfile 2.x — unmaintained, superseded by `rustls-pki-types`
+    # PEM parsing API. Functionally identical wrapper, so the advisory is
+    # informational. Migration scheduled with the rustls 0.24 bump.
+    # Tracker: https://github.com/rustls/pemfile/issues/61
+    "RUSTSEC-2025-0134",
+
+    # paste 1.0.15 — unmaintained. Pulled in transitively via `cryptoki`,
+    # which is the canonical PKCS#11 binding. No alternative without forking
+    # cryptoki, which is outside the scope of this workspace. Mitigation:
+    # `paste` is a build-time proc-macro with no runtime surface.
+    # Tracker: https://github.com/dtolnay/paste
+    "RUSTSEC-2024-0436",
+
+    # rustls-webpki 0.102.8 — pulled in transitively by `rustls 0.23.18`,
+    # which is the latest published rustls and hard-pins `rustls-webpki =
+    # "0.102.8"` in its own manifest. We CANNOT upgrade to 0.103.x here
+    # without bumping rustls (no published release available). Mitigation:
+    # all four advisories require either an attacker-controlled CRL config
+    # or a misissued cert from a trusted CA. The enterprise workspace's
+    # rustls consumers (`craton-hsm-cluster`, `craton-hsm-kmip`) do NOT
+    # configure CRLs on their rustls clients/servers (`grep -rn 'with_crls\|
+    # CertRevocation' craton-hsm-cluster/src craton-hsm-kmip/src` returns
+    # nothing), so the CRL-specific advisories
+    # (RUSTSEC-2026-0049 — CRL distributionPoint matching, RUSTSEC-2026-0104
+    # — reachable panic in CRL parsing) are unreachable. The name-constraint
+    # advisories (RUSTSEC-2026-0098 URI, RUSTSEC-2026-0099 DNS wildcard +
+    # constraint) require an attacker to obtain a misissued cert from a
+    # trusted issuing authority — out of scope for this layer. Our direct
+    # `rustls-webpki = "=0.103.13"` workspace pin already runs the fixed
+    # webpki on the CRL-parsing path in `craton-hsm-auth/src/auth/cert.rs`,
+    # where attacker-controlled CRLs DO matter.
+    # Tracker: https://github.com/rustls/rustls/issues/2272 (next rustls
+    # release will bump to webpki 0.103).
+    "RUSTSEC-2026-0049",
+    "RUSTSEC-2026-0098",
+    "RUSTSEC-2026-0099",
+    "RUSTSEC-2026-0104",
+]
+
+[licenses]
+version = 2
+# `unused-allowed-license = "allow"` keeps cargo-deny from flagging entries
+# in the allow-list that happened not to be encountered in the current dep
+# graph. Without it cargo-deny 0.19+ raises a section-level failure when an
+# allowance has no matching crate, which churns this list on every dep
+# refresh even though "permitted but unused" is the correct policy.
+unused-allowed-license = "allow"
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "MPL-2.0",
+    "CC0-1.0",
+    "Zlib",
+    "BUSL-1.1",
+]
+# Note: the bare `OpenSSL` SPDX is no longer accepted globally. Modern openssl
+# ships as `Apache-2.0`. Crates that still surface the old SPDX must be
+# enumerated via [[licenses.exceptions]] so each occurrence is reviewed and
+# the legal team's approval is captured in deny.toml itself.
+
+[[licenses.exceptions]]
+# aws-lc-fips-sys vendors the AWS-LC FIPS module, which is a fork of the
+# original BoringSSL/OpenSSL FIPS code. Its SPDX expression is
+# `ISC AND (Apache-2.0 OR ISC) AND OpenSSL` — every component is OSI-approved
+# and the OpenSSL clause covers the historical-OpenSSL-licensed pieces inside
+# the FIPS module. This exception is intentionally scoped to the FIPS sys
+# crate; the rest of the tree continues to reject bare `OpenSSL`.
+name = "aws-lc-fips-sys"
+allow = ["OpenSSL"]
+
+[bans]
+# Tighten: dupe versions used to be `warn`. Now `deny` with an explicit
+# allowlist of currently-known unavoidable duplicates so new dupes are caught
+# in CI. Audit the [bans.skip] list quarterly.
+multiple-versions = "deny"
+wildcards = "deny"
+# Workspace and path dependencies are intentionally version-less (they resolve
+# via the workspace `[workspace.dependencies]` block or via a sibling path).
+# Without this opt-in, cargo-deny treats every `workspace = true` /
+# `path = "..."` entry as a `*` wildcard and fails the workspace-internal
+# `craton-hsm = { path = "..." }` and `craton-hsm.workspace = true` lines.
+allow-wildcard-paths = true
+
+# `windows-sys` / `windows-targets` and their per-arch import-lib crates
+# routinely ship multiple versions during their semver-minor cadence; tracking
+# each individually is busywork.
+[[bans.skip]]
+name = "windows-sys"
+[[bans.skip]]
+name = "windows-targets"
+[[bans.skip]]
+name = "windows_aarch64_gnullvm"
+[[bans.skip]]
+name = "windows_aarch64_msvc"
+[[bans.skip]]
+name = "windows_i686_gnu"
+[[bans.skip]]
+name = "windows_i686_gnullvm"
+[[bans.skip]]
+name = "windows_i686_msvc"
+[[bans.skip]]
+name = "windows_x86_64_gnu"
+[[bans.skip]]
+name = "windows_x86_64_gnullvm"
+[[bans.skip]]
+name = "windows_x86_64_msvc"
+
+# `syn` 1.x / 2.x coexistence is universal across the proc-macro ecosystem.
+[[bans.skip]]
+name = "syn"
+# `hashbrown` and `foldhash` transition between std re-export and bundled
+# copies as the std API stabilises.
+[[bans.skip]]
+name = "hashbrown"
+[[bans.skip]]
+name = "foldhash"
+
+# RustCrypto split-version transitions. The post-quantum crates
+# (`slh-dsa`, `ml-dsa`) and the latest `aead` 0.6 family pull a newer
+# generation of the RustCrypto primitives (digest 0.11, signature 2.3,
+# pkcs8 0.11, der 0.8, spki 0.8, sha3 0.11, …) while the rest of the
+# tree still pins the 0.10/0.7-era crates. The upgrade is being staged
+# crate-by-crate; tracking each duplicate individually buys nothing.
+[[bans.skip]]
+name = "block-buffer"
+[[bans.skip]]
+name = "cipher"
+[[bans.skip]]
+name = "const-oid"
+[[bans.skip]]
+name = "crypto-common"
+[[bans.skip]]
+name = "der"
+[[bans.skip]]
+name = "digest"
+[[bans.skip]]
+name = "hmac"
+[[bans.skip]]
+name = "inout"
+[[bans.skip]]
+name = "keccak"
+[[bans.skip]]
+name = "pkcs8"
+[[bans.skip]]
+name = "sha2"
+[[bans.skip]]
+name = "sha3"
+[[bans.skip]]
+name = "signature"
+[[bans.skip]]
+name = "spki"
+
+# `rand` 0.8 vs 0.9 — `quinn` and friends moved to rand 0.9 while the FIPS-
+# adjacent crates still run on rand 0.8 (per the exact-version pin policy).
+[[bans.skip]]
+name = "rand"
+[[bans.skip]]
+name = "rand_chacha"
+[[bans.skip]]
+name = "rand_core"
+[[bans.skip]]
+name = "getrandom"
+[[bans.skip]]
+name = "r-efi"
+
+# `rustls-webpki` 0.102 (rustls 0.23 default-features pull-in) vs 0.103
+# (workspace direct dep). Removed when rustls 0.23 stops re-exporting the
+# 0.102 line.
+[[bans.skip]]
+name = "rustls-webpki"
+[[bans.skip]]
+name = "untrusted"
+
+# `secrecy` 0.8 (cryptoki) vs 0.10 (this workspace).
+[[bans.skip]]
+name = "secrecy"
+
+# `thiserror` 1 vs 2. The 1.x line remains via x509-parser / asn1-rs while
+# the workspace uses 2.x directly.
+[[bans.skip]]
+name = "thiserror"
+[[bans.skip]]
+name = "thiserror-impl"
+
+# Misc ecosystem split-versions (low-level helpers).
+[[bans.skip]]
+name = "bitflags"
+[[bans.skip]]
+name = "cpufeatures"
+[[bans.skip]]
+name = "libloading"
+[[bans.skip]]
+name = "socket2"
+[[bans.skip]]
+name = "wit-bindgen"
+# `winnow` 0.7 vs 1.0 — toml 1.0 (pinned for MSRV 1.75 compat, see Cargo.lock)
+# uses winnow 0.7, while toml_edit 0.22 (pulled in by some build tooling) is
+# on winnow 1.0. Aligns once toml's MSRV catches up and the workspace can move
+# back to toml 1.1.x.
+[[bans.skip]]
+name = "winnow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

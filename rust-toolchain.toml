@@ -1,0 +1,6 @@
+[toolchain]
+# Dev toolchain. Matches craton-hsm-core/rust-toolchain.toml.
+# Workspace MSRV is 1.75.0 (declared in Cargo.toml); the MSRV CI job verifies that.
+# Pin held at "stable" so Cargo.lock (v4) is readable; 1.75.0's cargo only handles v3.
+channel = "stable"
+components = ["rustfmt", "clippy"]

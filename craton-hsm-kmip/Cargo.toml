@@ -1,0 +1,49 @@
+[package]
+name = "craton-hsm-kmip"
+description = "KMIP 2.1 wire encoding and subset of §6 operations for Craton HSM"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+rust-version = "1.75"
+keywords = ["kmip", "hsm", "cryptography", "key-management", "ttlv"]
+categories = ["cryptography", "network-programming"]
+
+[dependencies]
+craton-hsm.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+dashmap.workspace = true
+rand.workspace = true
+zeroize.workspace = true
+subtle.workspace = true
+hkdf.workspace = true
+hex.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+tokio-rustls.workspace = true
+# Hot-path attribute buffer: avoids a heap allocation on the common path
+# where a request carries <= 8 attributes (audit finding L8). Pinned to an
+# exact version to match the reproducibility posture of the workspace.
+smallvec = "^1.15"
+# W1: shared `peer_san_or_cn` helper. Duplicates the cluster crate's
+# implementation by design — see `craton_hsm_cluster::replication::peer_san_or_cn`.
+x509-parser = "^0.16"
+
+[features]
+default = []
+# Allow `KmipServerConfig::auth_token` (a single shared bearer token) at runtime.
+# Off by default so misconfiguration cannot silently ship a dev-only auth mode
+# into production; when enabled, runtime startup additionally requires the
+# `CRATON_HSM_ALLOW_INSECURE_STATIC_TOKEN=1` environment variable as a second
+# opt-in. Production deployments should integrate craton-hsm-auth (mTLS / IdP)
+# instead of using this feature.
+insecure-static-token = []
+
+[dev-dependencies]
+tempfile.workspace = true
+rcgen.workspace = true

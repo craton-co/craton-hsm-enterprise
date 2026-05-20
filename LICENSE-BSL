@@ -1,0 +1,97 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor:             Craton Software Company
+Licensed Work:        Craton HSM Enterprise 0.1.1
+                      The Licensed Work is (c) 2026 Craton Software Company.
+Additional Use Grant: You may make use of the Licensed Work, provided that
+                      you may not use the Licensed Work for a Competing
+                      Use.
+
+                      A "Competing Use" is any use of the Licensed Work
+                      to provide a product or service that competes with
+                      the Licensed Work or any other product or service
+                      provided by the Licensor. This includes, without
+                      limitation, any use of the Licensed Work:
+
+                      (i)   to provide a hardware security module (HSM),
+                            key management service (KMS), cryptographic
+                            appliance, or certificate authority product
+                            offered to third parties;
+                      (ii)  to provide a managed or hosted cryptographic
+                            key management or signing service;
+                      (iii) to create, distribute, or sell a product whose
+                            primary function is cryptographic key storage,
+                            key management, or cryptographic operations;
+                      (iv)  to provide FIPS 140-validated or Common
+                            Criteria-certified cryptographic services
+                            using this software as a component;
+                      (v)   to offer consulting, integration, or support
+                            services for this software to third parties
+                            without a commercial license from the Licensor.
+
+                      The following uses are expressly permitted and are
+                      NOT considered Competing Use:
+                      (a) Internal evaluation, development, and testing;
+                      (b) Use in non-commercial open-source projects
+                          (projects that do not generate revenue);
+                      (c) Academic and research use;
+                      (d) Use as a dependency in applications where
+                          cryptographic key management is not the primary
+                          function of the application;
+                      (e) Personal or hobby projects with no commercial
+                          distribution.
+
+Change Date:          The earlier of 2030-03-13 or four years from the
+                      date this specific version was first publicly
+                      distributed.
+Change License:       Apache License, Version 2.0
+
+-----------------------------------------------------------------------------
+
+Notice
+
+Business Source License 1.1
+
+Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work. The
+Licensor may make an Additional Use Grant, above, permitting limited
+production use.
+
+Effective on the Change Date, or the fourth anniversary of the first publicly
+available distribution of a specific version of the Licensed Work under this
+License, whichever comes first, the Licensor hereby grants you rights under
+the terms of the Change License, and the rights granted in the paragraph
+above terminate.
+
+If your use of the Licensed Work does not comply with the requirements
+currently in effect as described in this License, you must purchase a
+commercial license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Licensed Work.
+
+All copies of the original and modified Licensed Work, and derivative works
+of the Licensed Work, are subject to this License. This License applies
+separately for each version of the Licensed Work and the Change Date may
+vary for each version of the Licensed Work released by Licensor.
+
+You must conspicuously display this License on each original or modified copy
+of the Licensed Work. If you receive the Licensed Work in original or
+modified form from a third party, the terms and conditions set forth in this
+License apply to your use of that work.
+
+Any use of the Licensed Work in violation of this License will automatically
+terminate your rights under this License for the current and all other
+versions of the Licensed Work.
+
+This License does not grant you any right in any trademark or logo of
+Licensor or its affiliates (provided that you may use a trademark or logo of
+Licensor as expressly required by this License).
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON
+AN "AS IS" BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
+TITLE.

@@ -1,0 +1,47 @@
+# License Change Notice
+
+## Craton HSM Enterprise License Timeline
+
+Craton HSM Enterprise is licensed under the Business Source License 1.1 (BSL 1.1).
+
+### What this means
+
+- **Now:** You can freely use, modify, and redistribute for evaluation,
+  development, testing, academic use, and non-commercial open-source projects.
+  Competing use — building or offering HSMs, KMS, cryptographic appliances,
+  FIPS-validated crypto services, or professional services around this
+  software — requires a commercial license from Craton Software Company
+
+- **On the per-version Change Date:** The license for each version
+  automatically converts to Apache License 2.0. From that date forward,
+  that version may be used for any purpose — including commercial
+  production — under Apache-2.0 terms. The Change Date is fixed per
+  version at the time that version is first published and does **not**
+  shift with later releases.
+
+### How the Change Date is computed
+
+For each released version, the Change Date is the **earlier** of:
+
+1. Four years after the date that version was first published as a Git tag
+   in this repository (the "BSL Start" column below), **or**
+2. A hard cap of four years after the initial public release of Craton HSM
+   Enterprise (the 0.1.0 tag, 2026-03-13), which is **2030-03-13**.
+
+The hard cap ensures the entire 0.x series converts to Apache-2.0 no later
+than 2030-03-13 regardless of how many patch releases occur in between.
+
+### Version History
+
+| Version | BSL Start  | Change Date | Change License |
+|---------|------------|-------------|----------------|
+| 0.1.0   | 2026-03-13 | 2030-03-13  | Apache-2.0     |
+| 0.1.1   | 2026-04-17 | 2030-03-13  | Apache-2.0     |
+
+New releases append rows to this table. The Change Date for each entry is
+the value encoded into that version's `LICENSE-BSL` at release time and
+is immutable thereafter.
+
+### Questions
+
+For commercial licensing inquiries, contact **license@craton.com.ar**.

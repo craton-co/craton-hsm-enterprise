@@ -1,0 +1,37 @@
+name: Feature Request
+description: Suggest a new feature for Craton HSM Enterprise
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For commercial feature requests or enterprise support, contact [license@craton.com.ar](mailto:license@craton.com.ar).
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A brief description of the feature you'd like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this feature needed? What problem does it solve?
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed Design
+      description: How do you think this should be implemented?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, or examples.

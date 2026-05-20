@@ -1,0 +1,40 @@
+[package]
+name = "craton-hsm-awslc"
+description = "Craton HSM FIPS-validated crypto backend using aws-lc-rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+craton-hsm.workspace = true
+aws-lc-rs.workspace = true
+
+# RustCrypto crates for prehashed signing (aws-lc-rs doesn't expose prehashed APIs)
+# WARNING: These are NOT FIPS-validated. See FIPS BOUNDARY WARNING in lib.rs.
+rsa = { version = "=0.9.10", features = ["sha2"] }
+p256 = { version = "=0.13.2", features = ["ecdsa"] }
+p384 = { version = "=0.13.1", features = ["ecdsa"] }
+sha2.workspace = true
+tracing.workspace = true
+dashmap.workspace = true
+hmac.workspace = true
+parking_lot.workspace = true
+zeroize = "1"
+rand = { workspace = true }
+lru.workspace = true
+fs2 = "=0.4.3"
+
+[features]
+fips = []
+
+[dev-dependencies]
+tempfile.workspace = true
+# Cross-backend interop tests verify that bytes produced by AwsLcBackend
+# verify/decrypt under OpenSslBackend and vice versa. Dev-dep only; never
+# pulled into the FIPS crate's runtime surface.
+craton-hsm-openssl = { path = "../craton-hsm-openssl" }

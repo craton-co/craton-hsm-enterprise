@@ -1,0 +1,155 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Least-privilege at the workflow level; individual jobs can broaden.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: craton-co/craton-hsm-core
+          path: ../craton-hsm-core
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - run: cargo test --workspace
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: craton-co/craton-hsm-core
+          path: ../craton-hsm-core
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - run: cargo clippy --workspace -- -D warnings -D clippy::correctness -D clippy::suspicious
+
+  release:
+    name: Create release
+    needs: [test, clippy]
+    runs-on: ubuntu-latest
+    # Needed to publish release assets, sign with cosign (OIDC), and attest
+    # provenance.
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: craton-co/craton-hsm-core
+          path: ../craton-hsm-core
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+
+      - name: Build release
+        run: cargo build --workspace --release
+
+      - name: Stage release artifacts
+        id: stage
+        run: |
+          set -euxo pipefail
+          mkdir -p dist
+          TAG="${GITHUB_REF_NAME}"
+          # Source tarball (excluding target/ and .git/). Pipe through
+          # `gzip -n` so the gzip timestamp/name fields are stripped — without
+          # this, byte-for-byte reproducibility breaks each rebuild.
+          git archive --format=tar --prefix="craton-hsm-enterprise-${TAG}/" "${TAG}" \
+            | gzip -n -9 > "dist/craton-hsm-enterprise-${TAG}.tar.gz"
+          # NOTE: deliberately do NOT ship `.rlib` files. They are
+          # toolchain-version-stamped, non-reproducible, and not consumable by
+          # downstream users — supply chain attestation focuses on the source
+          # tarball and SBOMs.
+          ls -la dist/
+
+      - name: Install Syft (SBOM generator)
+        uses: anchore/sbom-action/download-syft@61119d458adab75f756bc0b9e4bde25725f86a7a # v0.17.7
+
+      - name: Generate SBOMs (SPDX + CycloneDX)
+        run: |
+          set -euxo pipefail
+          syft dir:. -o spdx-json    > dist/sbom.spdx.json
+          # SUPPLY_CHAIN.md promises `*.sbom.cdx.json` for CycloneDX.
+          syft dir:. -o cyclonedx-json > dist/craton-hsm-enterprise.sbom.cdx.json
+
+      - name: Generate SHA256SUMS
+        run: |
+          set -euxo pipefail
+          cd dist
+          # Stable lexicographic order so the file is byte-reproducible.
+          sha256sum $(ls | sort) > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
+
+      - name: Sign release artifacts (keyless, Sigstore)
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+          COSIGN_YES: "true"
+        run: |
+          set -euxo pipefail
+          # Sign ONLY the tarball, SBOMs, and the SHA256SUMS aggregate. Per
+          # SUPPLY_CHAIN.md: the SHA256SUMS.sig is the authoritative anchor.
+          for f in \
+            dist/craton-hsm-enterprise-*.tar.gz \
+            dist/sbom.spdx.json \
+            dist/craton-hsm-enterprise.sbom.cdx.json \
+            dist/SHA256SUMS \
+          ; do
+            cosign sign-blob --yes \
+              --output-certificate "${f}.pem" \
+              --output-signature   "${f}.sig" \
+              "${f}"
+          done
+
+      - name: Attest provenance (SLSA, in-toto v1)
+        uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb # v2.1.0
+        with:
+          subject-path: 'dist/craton-hsm-enterprise-*.tar.gz'
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@bd218ad0dbcb3e146bd073d1d9c6d78e08aa8a0b # v1.4.1
+        with:
+          subject-path: 'dist/craton-hsm-enterprise-*.tar.gz'
+          sbom-path: 'dist/sbom.spdx.json'
+
+      - name: Collect intoto attestation bundles
+        # `actions/attest-*` emits `*.intoto.jsonl` into the runner's
+        # attestation store. Surface them as release assets so verifiers can
+        # consume them without going through the GitHub API.
+        run: |
+          set -euxo pipefail
+          find ~/.actions/attestations -name '*.intoto.jsonl' -exec cp {} dist/ \; || true
+          ls -la dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
+        with:
+          generate_release_notes: true
+          draft: false
+          files: |
+            dist/*

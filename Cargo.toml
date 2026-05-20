@@ -1,0 +1,103 @@
+[workspace]
+members = [
+    "craton-hsm-openssl",
+    "craton-hsm-awslc",
+    "craton-hsm-nxp",
+    "craton-hsm-infineon",
+    "craton-hsm-certified",
+    "craton-hsm-cluster",
+    "craton-hsm-kmip",
+    "craton-hsm-cloud",
+    "craton-hsm-auth",
+    "craton-hsm-cng",
+    "craton-hsm-pkcs11",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.1"
+edition = "2021"
+rust-version = "1.75.0"
+license = "BUSL-1.1"
+repository = "https://github.com/craton-co/craton-hsm-enterprise"
+homepage = "https://craton.io/craton-hsm"
+documentation = "https://docs.rs/craton-hsm"
+authors = ["Craton Software Company <engineering@craton.io>"]
+keywords = ["hsm", "pkcs11", "cryptography", "fips", "tpm"]
+categories = ["cryptography", "hardware-support", "authentication"]
+
+# ----------------------------------------------------------------------------
+# Exact-version pin policy
+# ----------------------------------------------------------------------------
+# All workspace dependencies use exact (=X.Y.Z) pins to support FIPS
+# re-certification. Update only via the documented process in SECURITY.md.
+#
+# Rationale: FIPS 140-3 module boundaries and CMVP validation certificates
+# apply to a specific cryptographic module at a specific version. A silent
+# minor-version bump in a crypto-adjacent dependency (aws-lc-rs, sha2, hmac,
+# rand, zeroize, subtle) can invalidate the validation lab's test run and
+# push the certificate back into re-evaluation. Pinning every crate to an
+# exact version makes that risk explicit: any update shows up as a
+# deliberate Cargo.toml diff that the maintainer review process inspects
+# against the FIPS change-log policy before merging.
+#
+# Non-crypto deps (tokio, serde, tracing, dashmap, tempfile, parking_lot)
+# are pinned to the same standard so a `cargo update` cannot silently pull
+# in a newer minor series that depends on a newer crypto crate.
+# ----------------------------------------------------------------------------
+[workspace.dependencies]
+# Core dependency.
+#
+# Always resolved from crates.io — the enterprise workspace is intentionally
+# self-contained and matches what runs in GitHub CI. Developers who want to
+# hack on `craton-hsm` alongside enterprise should override locally with a
+# `[patch.crates-io]` entry in `.cargo/config.toml` (gitignored) rather than
+# editing this manifest, so the resulting Cargo.lock that is committed is
+# always reproducible from crates.io.
+craton-hsm = { version = "=0.9.2", package = "craton-hsm" }
+# NOTE on `ml-dsa`: `craton-hsm` 0.9.2 imports the `KeyGen` trait
+# (`MlDsa44::key_gen`, `from_seed`) that ml-dsa 0.1.0-rc.9 still exposes,
+# but the 0.1.0 final release dropped — only `SigningKey::from_seed`
+# remains. Cargo's resolver would otherwise pick the final via
+# `^0.1.0-rc.7`, so `Cargo.lock` is pinned to `0.1.0-rc.9`. Do NOT
+# run `cargo update -p ml-dsa` without confirming `craton-hsm` has been
+# republished against the post-final API.
+aws-lc-rs = { version = "=1.16.2", features = ["fips"] }
+sha2 = "=0.10.9"
+serde = { version = "=1.0.225", features = ["derive"] }
+serde_json = "=1.0.140"
+tokio = { version = "=1.44.2", features = ["rt-multi-thread", "macros", "net", "io-util", "sync", "time"] }
+tracing = "=0.1.41"
+dashmap = "=6.1.0"
+rand = "=0.8.6"
+tempfile = "=3.19.1"
+hmac = "=0.12.1"
+zeroize = { version = "=1.8.1", features = ["derive"] }
+subtle = "=2.6.1"
+parking_lot = "=0.12.3"
+hkdf = "=0.12.4"
+hex = "=0.4.3"
+memchr = "=2.7.4"
+smallvec = "=1.15.1"
+# Security fix: RUSTSEC-2026-0002 (IterMut stacked-borrows soundness) lands in 0.16.3.
+lru = "=0.16.3"
+arc-swap = "=1.7.1"
+# TLS 1.3 is always-on in rustls 0.23 (no `tls13` feature exists — the
+# protocol is unconditional and `tls12` only re-enables the legacy path).
+# HARDENING.md prefers TLS 1.3; we keep tls12 for transitional compatibility
+# but TLS 1.3 is the preferred handshake.
+# TODO: standardize on aws-lc-rs rustls provider (currently `ring`); migrate
+# in a follow-up RFC once aws-lc-rs default-provider parity lands.
+tokio-rustls = { version = "=0.26.0", default-features = false, features = ["ring", "tls12"] }
+rustls = { version = "=0.23.18", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-pemfile = "=2.2.0"
+webpki-roots = "=0.26.7"
+rcgen = "=0.13.1"
+serial_test = "=3.1.1"
+# Pin toml to 0.8.x to avoid edition2024 requirement in 1.1.0+spec-1.1.0
+# which is not available in Rust 1.75.0 (MSRV)
+toml = "=0.8.19"
+# Security fix: RUSTSEC-2026-0099, RUSTSEC-2026-0098, RUSTSEC-2026-0049,
+# RUSTSEC-2026-0104. Upgrade rustls-webpki to fix name constraints, CRL
+# validation, and the CRL-parsing reachable-panic vulnerabilities.
+rustls-webpki = "=0.103.13"

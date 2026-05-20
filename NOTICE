@@ -1,0 +1,17 @@
+Craton HSM Enterprise
+Copyright 2026 Craton Software Company
+
+Licensed under the Business Source License 1.1 (the "License");
+you may not use this file except in compliance with the License.
+See LICENSE-BSL for the full license text.
+
+Each version of the Licensed Work automatically converts to
+Apache License 2.0 four years after its first public release.
+See LICENSE-CHANGE for the version-specific timeline.
+
+This product includes software developed at Craton Software Company (https://github.com/craton-co).
+
+Source code: https://github.com/craton-co/craton-hsm-enterprise
+
+This software depends on Craton HSM Core (https://github.com/craton-co/craton-hsm-core),
+licensed under Apache-2.0.

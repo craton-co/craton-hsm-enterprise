@@ -1,0 +1,25 @@
+[package]
+name = "craton-hsm-certified"
+description = "FIPS 140-3 certification tooling for Craton HSM builds with integrity verification"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+# `awslc-backend` is required so tests in `test_harness` and `acvp` can
+# instantiate `craton_hsm::crypto::awslc_backend::AwsLcBackend` against the
+# FIPS-validated aws-lc-rs primitives.
+craton-hsm = { workspace = true, features = ["awslc-backend"] }
+aws-lc-rs.workspace = true
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror = "2"
+
+[dev-dependencies]
+tempfile = "3"
