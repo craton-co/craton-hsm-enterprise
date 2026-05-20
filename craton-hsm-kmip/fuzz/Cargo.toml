@@ -1,0 +1,28 @@
+[package]
+name = "craton-hsm-kmip-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+# Placeholder fuzz harness for the TTLV parser. Tracked in the audit pass
+# under "Add fuzz target placeholder". Not run in CI — wire into a fuzzing
+# job (libfuzzer / cargo-fuzz / OSS-Fuzz) when one becomes available.
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.craton-hsm-kmip]
+path = ".."
+
+[workspace]
+# Standalone — do not pull into the top-level workspace.
+
+[[bin]]
+name = "ttlv_decode"
+path = "fuzz_targets/ttlv_decode.rs"
+test = false
+doc = false
+bench = false

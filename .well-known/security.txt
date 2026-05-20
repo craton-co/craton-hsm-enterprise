@@ -1,0 +1,10 @@
+# RFC 9116 security.txt for craton-hsm-enterprise
+# https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:security@craton.com.ar
+Expires: 2027-01-01 00:00:00
+Encryption: https://craton.com.ar/.well-known/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://craton.com.ar/.well-known/security.txt
+Policy: https://github.com/craton-co/craton-hsm-enterprise/blob/main/SECURITY.md
+Acknowledgments: https://github.com/craton-co/craton-hsm-enterprise/blob/main/SECURITY.md#acknowledgements

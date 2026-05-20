@@ -1,0 +1,46 @@
+[package]
+name = "craton-hsm-nxp"
+description = "Craton HSM backend for NXP HSE (Hardware Security Engine)"
+version.workspace = true
+edition.workspace = true
+rust-version = "1.75"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+# Pre-release: hardware integration requires vendor SDK under NDA.
+# Do not publish to crates.io until a public-SDK-only path is available.
+publish = false
+
+[dependencies]
+craton-hsm.workspace = true
+tracing.workspace = true
+zeroize.workspace = true
+smallvec.workspace = true
+
+[dev-dependencies]
+serial_test.workspace = true
+
+[features]
+default = []
+hw = []    # Enable real NXP HSE hardware calls via Messaging Unit
+stub = []  # Explicit development build: every op returns FunctionNotSupported.
+           # Audit finding NXP-1: required (alongside `hw`) for a successful
+           # compile — see the `compile_error!` at the top of `src/lib.rs`.
+           # To run the test suite: `cargo test -p craton-hsm-nxp --features stub`.
+test-stub = ["stub"]  # Relaxed `new_stub_for_test` construction path used by
+                       # the crate's unit/integration tests only. Implies
+                       # `stub` so the compile_error gate is satisfied.
+                       # Also enables the `backend_trait::MockHseBackend`
+                       # and the trait-dispatching `CryptoBackend` impl so
+                       # mock-based integration tests can inject a fake
+                       # FFI layer — audit finding NXP-3.
+
+[[test]]
+name = "mock_ffi_smoke"
+# The mock-based portion of this test requires the trait-dispatching impl.
+required-features = ["test-stub"]

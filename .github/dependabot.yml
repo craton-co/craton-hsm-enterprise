@@ -1,0 +1,165 @@
+version: 2
+updates:
+  # Root workspace Cargo.toml. Dependabot follows the [workspace] manifest and
+  # transitively watches every member, so a single root entry covers all
+  # 11 crates (auth, awslc, certified, cloud, cluster, cng, infineon, kmip,
+  # nxp, openssl, pkcs11).
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore"
+
+  # Per-crate entries for any crate that declares its own Cargo.toml with
+  # dependencies not lifted to the workspace [workspace.dependencies] table.
+  # Keeping these explicit means Dependabot opens per-crate PRs when a
+  # security-sensitive crate (auth, awslc, certified, kmip, pkcs11) needs a
+  # focused bump, which is easier to review than a workspace-wide bump.
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-auth"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "auth"
+    reviewers:
+      - "craton-co/core-team"
+      - "craton-co/security"
+    commit-message:
+      prefix: "chore(auth)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-awslc"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "fips"
+    reviewers:
+      - "craton-co/core-team"
+      - "craton-co/security"
+    commit-message:
+      prefix: "chore(awslc)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-certified"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "fips"
+    reviewers:
+      - "craton-co/core-team"
+      - "craton-co/security"
+    commit-message:
+      prefix: "chore(certified)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-kmip"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "craton-co/core-team"
+      - "craton-co/security"
+    commit-message:
+      prefix: "chore(kmip)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-pkcs11"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "craton-co/core-team"
+      - "craton-co/security"
+    commit-message:
+      prefix: "chore(pkcs11)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-cluster"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore(cluster)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-cloud"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore(cloud)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-openssl"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore(openssl)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-cng"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "windows"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore(cng)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-nxp"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "hardware"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore(nxp)"
+
+  - package-ecosystem: "cargo"
+    directory: "/craton-hsm-infineon"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "hardware"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore(infineon)"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ci"
+    reviewers:
+      - "craton-co/core-team"
+    commit-message:
+      prefix: "chore"

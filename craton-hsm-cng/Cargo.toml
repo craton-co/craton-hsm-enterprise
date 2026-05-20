@@ -1,0 +1,51 @@
+[package]
+name = "craton-hsm-cng"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Windows CNG/BCrypt crypto backend for Craton HSM"
+homepage.workspace = true
+documentation.workspace = true
+authors.workspace = true
+rust-version = "1.75"
+keywords = ["hsm", "cng", "bcrypt", "windows", "fips"]
+categories = ["cryptography", "hardware-support", "os::windows-apis"]
+readme = "README.md"
+# Pre-release: Windows-only backend pending a broader test matrix.
+publish = false
+
+[dependencies]
+craton-hsm = { workspace = true }
+tracing = "0.1"
+zeroize = { version = "1", features = ["derive"] }
+
+# Windows-only crypto deps: the full CNG implementation is gated behind
+# `#[cfg(windows)]`, and the only non-Windows code is the minimal stub
+# above which performs no cryptography. Pulling these crates in on
+# non-Windows targets just bloated the dependency graph without
+# providing any code path that linked them. Audit fix (CNG deps): move
+# every algorithm dep under the cfg(windows) gate.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Security_Cryptography",
+] }
+rsa = { version = "0.9", features = ["sha2"] }
+p256 = { version = "0.13", features = ["ecdh", "ecdsa"] }
+p384 = { version = "0.13", features = ["ecdh", "ecdsa"] }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+hmac = "0.12"
+sha2 = "0.10"
+subtle = "2"
+
+[dev-dependencies]
+hex = "0.4"
+rand = { workspace = true }
+sha2 = "0.10"
+rsa = { version = "0.9", features = ["sha2", "pem"] }
+p256 = { version = "0.13", features = ["ecdh", "ecdsa"] }
+p384 = { version = "0.13", features = ["ecdh", "ecdsa"] }
+
+[features]
+# Opt-in slow tests (RSA-4096 keygen is multi-second).
+rsa-slow-tests = []

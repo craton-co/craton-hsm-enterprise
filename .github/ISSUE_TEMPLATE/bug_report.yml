@@ -1,0 +1,84 @@
+name: Bug Report
+description: Report a bug in Craton HSM Enterprise
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **For security vulnerabilities, please see [SECURITY.md](../SECURITY.md) instead of opening a public issue.**
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: rust-version
+    attributes:
+      label: Rust Version
+      placeholder: "e.g., 1.75.0"
+    validations:
+      required: true
+  - type: input
+    id: crate
+    attributes:
+      label: Affected Crate(s)
+      placeholder: "e.g., craton-hsm-kmip, craton-hsm-openssl"
+    validations:
+      required: true
+  - type: input
+    id: features
+    attributes:
+      label: Feature Flags
+      placeholder: "e.g., fips, hw, mock"
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Hardware Environment
+      options:
+        - None / Software only
+        - Infineon TPM
+        - NXP HSE
+        - Cloud HSM
+        - Other
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, logs, or screenshots.

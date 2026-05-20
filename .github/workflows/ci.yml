@@ -1,0 +1,399 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege at the workflow level.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+# -----------------------------------------------------------------------------
+# Pinned action SHAs (placeholders — verify and re-pin via `gh api` before
+# merging). Each SHA below is a *known* tag commit at the time of writing; CI
+# resolves these to 40-char immutable refs. If GitHub Dependabot rotates the
+# tag the workflow continues to use the historical commit.
+# -----------------------------------------------------------------------------
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable @ 2024-10-21
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - run: cargo check --workspace
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable @ 2024-10-21
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - run: cargo test --workspace
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable @ 2024-10-21
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - run: cargo clippy --workspace -- -D warnings -D clippy::correctness -D clippy::suspicious
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable @ 2024-10-21
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - run: cargo fmt --all -- --check
+
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deny:
+    name: Dependency Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: EmbarkStudios/cargo-deny-action@e2f4ede4a4e60ea15ff31bc0647485d80c66cfba # v2.0.4
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable @ 2024-10-21
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      # craton-hsm-infineon and craton-hsm-nxp reject a feature-less build
+      # via compile_error! — they need --features stub (or hw). Doc them
+      # separately like the test/clippy jobs do.
+      - name: Build documentation (workspace)
+        run: cargo doc --workspace --no-deps --exclude craton-hsm-infineon --exclude craton-hsm-nxp
+        env:
+          RUSTDOCFLAGS: -D warnings
+      - name: Build documentation (craton-hsm-infineon --features stub)
+        run: cargo doc -p craton-hsm-infineon --no-deps --features stub
+        env:
+          RUSTDOCFLAGS: -D warnings
+      - name: Build documentation (craton-hsm-nxp --features stub)
+        run: cargo doc -p craton-hsm-nxp --no-deps --features stub
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  msrv:
+    name: Minimum Supported Rust Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # 1.75.0 pinned
+        with:
+          toolchain: "1.75.0"
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      # --locked is required so 1.75 doesn't re-resolve and pick up
+      # edition2024 transitives (toml_datetime 1.1.0+spec-1.1.0) whose
+      # manifests 1.75's cargo cannot parse. The committed v3 lockfile
+      # pins toml_datetime to a 1.75-compatible 1.0.x manifest.
+      # infineon/nxp need --features stub (their feature-less build is
+      # rejected by compile_error!), so they're checked separately.
+      - run: cargo check --workspace --locked --exclude craton-hsm-infineon --exclude craton-hsm-nxp
+      - run: cargo check -p craton-hsm-infineon --features stub --locked
+      - run: cargo check -p craton-hsm-nxp --features stub --locked
+
+  features:
+    name: Feature Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Check without mock feature (cloud crate)
+        run: cargo check -p craton-hsm-cloud --no-default-features
+      - name: Check with mock feature (cloud crate)
+        run: cargo check -p craton-hsm-cloud --features mock-insecure-do-not-ship
+      - name: Check with fips feature (awslc crate)
+        run: cargo check -p craton-hsm-awslc --features fips
+      - name: Check auth with ldap-auth feature
+        run: cargo check -p craton-hsm-auth --features ldap-auth
+      - name: Check auth with cert-auth feature
+        run: cargo check -p craton-hsm-auth --features cert-auth
+      - name: Check auth with oidc-auth feature
+        run: cargo check -p craton-hsm-auth --features oidc-auth
+      - name: Check kmip with insecure-static-token feature
+        run: cargo check -p craton-hsm-kmip --features insecure-static-token
+
+  test-features:
+    name: Test (feature-gated)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Test craton-hsm-auth (cert-auth feature)
+        run: cargo test -p craton-hsm-auth --features cert-auth
+      - name: Test craton-hsm-auth (oidc-auth feature)
+        run: cargo test -p craton-hsm-auth --features oidc-auth
+      - name: Test craton-hsm-auth (ldap-auth feature)
+        run: cargo test -p craton-hsm-auth --features ldap-auth
+      - name: Test craton-hsm-cluster
+        run: cargo test -p craton-hsm-cluster
+      - name: Test craton-hsm-kmip (default features — static token disabled)
+        run: cargo test -p craton-hsm-kmip
+      - name: Test craton-hsm-kmip (insecure-static-token feature)
+        run: cargo test -p craton-hsm-kmip --features insecure-static-token
+      - name: Test craton-hsm-pkcs11
+        run: cargo test -p craton-hsm-pkcs11
+      - name: Test craton-hsm-certified
+        run: cargo test -p craton-hsm-certified
+      - name: Test craton-hsm-cloud
+        run: cargo test -p craton-hsm-cloud
+      - name: Test craton-hsm-nxp
+        run: cargo test -p craton-hsm-nxp
+      - name: Test craton-hsm-infineon
+        run: cargo test -p craton-hsm-infineon
+
+  fips:
+    name: FIPS tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - run: cargo test -p craton-hsm-awslc --features fips
+
+  # Windows CI for the CNG backend
+  check-windows:
+    name: Check (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Check CNG crate
+        run: cargo test -p craton-hsm-cng
+
+  # macOS CI
+  check-macos:
+    name: Check (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install aws-lc-rs build deps
+        run: brew install cmake nasm
+      - name: Check workspace (excluding CNG)
+        run: cargo check --workspace --exclude craton-hsm-cng
+
+  # Cross-compile sanity for aarch64-linux (no QEMU needed — `cargo check`
+  # only invokes the typechecker). Limited to crates without C/FFI/vendor
+  # dependencies that won't easily build for the foreign target.
+  cross-aarch64:
+    name: Cross-compile (aarch64-unknown-linux-gnu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm gcc-aarch64-linux-gnu
+      - name: cargo check (aarch64)
+        run: cargo check --target aarch64-unknown-linux-gnu -p craton-hsm-openssl -p craton-hsm-awslc --no-default-features
+
+  semver-checks:
+    name: cargo semver-checks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Run cargo-semver-checks
+        uses: obi1kenobi/cargo-semver-checks-action@7272cc2caa468d3e009a2b0a9cc366839348237b # v2.6
+        with:
+          # Allow informational mode for now; flip to fail-on-break once the
+          # API surface stabilises (post-0.x).
+          feature-group: only-explicit-features
+
+  coverage:
+    name: Test coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@9185c192a96ba09167ad8f9be5be97f9fe57a060 # cargo-llvm-cov
+        with:
+          tool: cargo-llvm-cov
+      # `cargo llvm-cov` accumulates coverage across all test runs in the same
+      # working tree when the report is requested at the end. Concatenating
+      # `.info` files with `cat` produced malformed LCOV — replace with a
+      # single `--lcov` run that natively merges per-feature instrumentation.
+      - name: Generate coverage (all features)
+        run: cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
+      - name: Upload coverage
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+      - name: Enforce coverage threshold (>= 85% lines)
+        run: cargo llvm-cov report --fail-under-lines 85
+
+  miri:
+    name: Miri (subset)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install nightly with miri
+        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # nightly
+        with:
+          toolchain: nightly
+          components: miri,rust-src
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Miri setup
+        run: cargo +nightly miri setup
+      # Miri does not support arbitrary FFI, so we restrict it to crates that
+      # are pure Rust: auth, cluster, kmip. CNG, NXP, Infineon are excluded
+      # because they link OS/vendor libraries.
+      - name: Miri test craton-hsm-auth
+        run: cargo +nightly miri test -p craton-hsm-auth --lib
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+      - name: Miri test craton-hsm-cluster
+        run: cargo +nightly miri test -p craton-hsm-cluster --lib
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+      - name: Miri test craton-hsm-kmip
+        run: cargo +nightly miri test -p craton-hsm-kmip --lib
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+
+  fuzz-smoke:
+    name: Fuzz Smoke (60s per target)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # nightly
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      # Run each fuzz target for 60 seconds. Failures are *not* silenced —
+      # `cargo fuzz list` errors propagate so a broken fuzz config fails CI
+      # instead of being swallowed.
+      - name: Discover and smoke-test fuzz targets
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for fuzz_dir in */fuzz; do
+            crate=$(dirname "$fuzz_dir")
+            echo "::group::fuzz smoke for $crate"
+            (
+              cd "$crate"
+              for target in $(cargo fuzz list); do
+                echo "--- running $crate::$target for 60s ---"
+                cargo fuzz run "$target" -- -max_total_time=60 || {
+                  echo "fuzz smoke FAILED for $crate::$target"
+                  exit 1
+                }
+              done
+            )
+            echo "::endgroup::"
+          done
+
+  reproducible-build:
+    name: Reproducible Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # stable
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y cmake golang nasm
+      - name: Build 1
+        run: cargo build --release -p craton-hsm-awslc 2>&1 | tail -5
+      - name: Record build 1 hash
+        run: sha256sum target/release/libcraton_hsm_awslc.rlib > /tmp/build1.sha256
+      - name: Clean and rebuild
+        run: |
+          cargo clean
+          cargo build --release -p craton-hsm-awslc 2>&1 | tail -5
+      - name: Record build 2 hash
+        run: sha256sum target/release/libcraton_hsm_awslc.rlib > /tmp/build2.sha256
+      - name: Compare build hashes
+        # Hard-fail on diff so reproducibility regressions block the merge.
+        run: |
+          echo "Build 1:"; cat /tmp/build1.sha256
+          echo "Build 2:"; cat /tmp/build2.sha256
+          if ! diff /tmp/build1.sha256 /tmp/build2.sha256; then
+            echo "ERROR: Builds are NOT reproducible"
+            exit 1
+          fi
+          echo "Builds are reproducible"
+
+  dco:
+    name: DCO Sign-Off
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Check DCO
+        # tim-actions/dco has no recent tagged release — pin to a known main
+        # commit. Re-verify and bump quarterly.
+        uses: tim-actions/dco@2bf6dd6df21cfdf8ad223b3aaa247f0bcf3f0bca # master @ 2023-09

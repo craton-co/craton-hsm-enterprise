@@ -1,0 +1,64 @@
+[package]
+name = "craton-hsm-openssl"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "OpenSSL crypto backend for Craton HSM"
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+craton-hsm = { workspace = true }
+# Build environments without system OpenSSL headers (e.g. minimal Windows
+# CI runners) can opt in to building OpenSSL from source by enabling the
+# `vendored` feature on this crate. The default is the system OpenSSL
+# discovery path (pkg-config / OPENSSL_DIR) so production builds use the
+# OS's hardened, audited copy.
+openssl = "0.10"
+tracing = "0.1"
+memchr.workspace = true
+sha2 = "=0.10.9"
+hkdf = "0.12"
+dashmap = "6"
+zeroize = "1"
+subtle = "2"
+hmac = "=0.12.1"
+parking_lot = "=0.12.3"
+# Used by the atomic write-temp-then-rename path in
+# `gcm_counter::flush_body_to_disk` to guarantee the journal is never observed
+# in a half-written state on crash. Runtime (not test-only) requirement — see
+# the gcm_counter.rs file header.
+tempfile = "=3.19.1"
+
+[target.'cfg(windows)'.dependencies]
+# Used to call `GetFileInformationByHandle` for a stable file-identity tuple
+# (volume serial + 64-bit NTFS file index). We avoid `std::os::windows::fs::
+# MetadataExt::file_index`, which is unstable (`windows_by_handle` feature)
+# and only available on nightly. `windows-sys` 0.61 is already pinned by the
+# `craton-hsm-cng` sibling crate; keep the major in sync to share the
+# compiled artifact in the workspace target dir.
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+] }
+
+[dev-dependencies]
+# tempfile is a regular (non-dev) dependency above; nothing else is needed here.
+
+[features]
+default = []
+# Enable building OpenSSL from source (delegates to openssl-sys's vendored
+# build via cargo's `vendored` feature). Useful on systems missing the
+# dev headers; do NOT enable in production unless your build pipeline
+# does its own OpenSSL provenance check.
+vendored = ["openssl/vendored"]
+# Compile in the legacy `openssl::fips::enabled()` runtime check. The
+# `openssl` crate gates that module on `cfg(not(any(libressl, ossl300)))`
+# (i.e. OpenSSL 1.1.x / 1.0.2 only); referencing it under OpenSSL 3.0+
+# breaks the build. Enable this only when linking against an older OpenSSL
+# that ships the legacy FIPS module. Default builds (OpenSSL 3.0+) rely on
+# the provider API and the `CRATON_HSM_REQUIRE_FIPS` env var instead.
+legacy-ossl-fips = []

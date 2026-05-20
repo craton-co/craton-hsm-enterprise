@@ -1,0 +1,45 @@
+[package]
+name = "craton-hsm-infineon"
+description = "Craton HSM backend for Infineon SLB 9670/9672 (OPTIGA TPM)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+# Pre-release: hardware integration requires tpm2-tss and vendor verification.
+publish = false
+
+[dependencies]
+craton-hsm.workspace = true
+tracing.workspace = true
+zeroize.workspace = true
+
+[features]
+default = []
+hw = []    # Enable real TPM hardware calls via libtss2-esys
+stub = []  # Explicit development build: every op returns FunctionNotSupported.
+           # Required (alongside `hw`) for a successful compile — see the
+           # `compile_error!` at the top of `src/lib.rs` (audit finding
+           # INFINEON-1, matches NXP-1).
+           # To run the test suite:
+           #   `cargo test -p craton-hsm-infineon --features stub`.
+test-stub = ["stub"]  # Relaxed construction path used only by the crate's
+                       # own unit/integration tests. Implies `stub`.
+                       # Also enables `backend_trait::MockEsapiBackend`
+                       # and the trait-dispatching `CryptoBackend` impl
+                       # so mock-based integration tests can inject a
+                       # fake TSS2 layer — audit finding INFINEON-3.
+
+[[test]]
+name = "mock_ffi_smoke"
+required-features = ["test-stub"]
+
+[[test]]
+name = "audit_fixes"
+required-features = ["test-stub"]

@@ -1,0 +1,70 @@
+[package]
+name = "craton-hsm-auth"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Enterprise authentication, RBAC, and multi-tenancy for Craton HSM"
+readme = "README.md"
+documentation = "https://docs.rs/craton-hsm-auth"
+keywords = ["hsm", "authentication", "rbac", "mfa", "oidc"]
+categories = ["authentication", "cryptography"]
+
+[features]
+default = []
+ldap-auth = ["dep:ldap3", "dep:tokio"]
+oidc-auth = ["dep:jsonwebtoken", "dep:reqwest"]
+# Test-only harness that exposes OIDC helpers for building a provider with a
+# pre-seeded JWKS cache and for crafting signed JWTs without network I/O.
+# Enabled only by integration tests; not for production use.
+oidc-test-harness = ["oidc-auth"]
+cert-auth = ["dep:x509-parser"]
+# HTTPS CRL fetching for dynamic revocation refresh. Off by default because
+# it introduces outbound HTTPS traffic on the authentication path; operators
+# who want live CRL refresh can opt in.
+crl-http-fetch = ["cert-auth", "dep:reqwest"]
+
+[dependencies]
+craton-hsm = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+zeroize = { version = "1", features = ["derive"] }
+tracing = "0.1"
+dashmap = "6"
+sha1 = "=0.10.6"
+sha2 = "=0.10.9"
+hmac = "=0.12.1"
+base64 = "=0.22.1"
+subtle = "=2.6.1"
+rand = { workspace = true }
+pbkdf2 = { version = "=0.12.2", features = ["hmac"] }
+parking_lot = "=0.12.3"
+# Audit-fix shared workspace deps used by this crate.
+hex = { workspace = true }
+arc-swap = { workspace = true }
+# Audit fix (perf, ldap pool): bounded multi-producer/multi-consumer
+# queue used to replace the two-pass try_lock pool sweep.
+crossbeam-queue = "=0.3.11"
+
+# Optional auth dependencies
+ldap3 = { version = "0.11", optional = true }
+tokio = { version = "1", features = ["rt"], optional = true }
+jsonwebtoken = { version = "9", optional = true }
+# rustls-tls pinned explicitly (not native-tls) so the auth path uses a
+# memory-safe, FIPS-friendly TLS stack regardless of what other crates in the
+# workspace enable via feature unification.
+reqwest = { version = "0.12", features = ["blocking", "json", "rustls-tls"], optional = true, default-features = false }
+x509-parser = { version = "0.16", optional = true, features = ["verify"] }
+# Note: p256 is intentionally NOT listed here. It is used only by the
+# `#[cfg(test)]` self-signed certificate builders in `auth/cert.rs`; the
+# production code path never imports it. It is therefore declared only
+# under `[dev-dependencies]` below.
+
+[dev-dependencies]
+p256 = { version = "0.13", features = ["ecdsa"] }
+# RSA keypair generation + PKCS#8 encoding for the OIDC test harness.
+rsa = "0.9"
+jsonwebtoken = "9"
+serde_json = "1"
+base64 = "=0.22.1"

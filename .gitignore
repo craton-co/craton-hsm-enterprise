@@ -1,0 +1,34 @@
+# Workspace policy notes:
+# - `**/target/` is ignored everywhere, including per-crate target/ dirs that
+#   sometimes get committed by accident. If you see one checked in, remove it
+#   with `rm -rf <crate>/target` and commit the deletion.
+# - `Cargo.lock` is intentionally NOT ignored. This is a workspace with
+#   binary/bin-like crates (kmip server, csi driver); a committed root
+#   Cargo.lock pins transitive versions for reproducible builds. Per-crate
+#   Cargo.lock files inside members are ignored below via `**/Cargo.lock`
+#   override conventions — do not add a blanket `Cargo.lock` line here.
+# - Never add `*.pem` or similar to the allow-list even for test fixtures;
+#   use hex constants or build-time-generated keys in a test temp dir.
+
+**/target/
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+node_modules/
+.claude/
+
+# Coverage artifacts
+*.profraw
+lcov*.info
+
+# Security: prevent accidental commits of key material and secrets
+*.pem
+*.key
+*.p12
+*.p8
+.env
+*.env

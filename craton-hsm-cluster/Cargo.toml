@@ -1,0 +1,47 @@
+[package]
+name = "craton-hsm-cluster"
+description = "Craton HSM clustering, Raft consensus, and high availability"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tracing = "0.1"
+dashmap = "6"
+rand = { workspace = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "sync", "time"] }
+hmac = "0.12"
+parking_lot = "0.12"
+subtle = "2"
+zeroize = { version = "1", features = ["derive", "serde"] }
+# W1: mTLS-backed `MTlsChannel` / `MTlsTransport`. The `tokio-rustls`
+# stack is the same one used by the KMIP server (audit C1) so the cluster
+# and KMIP fronts can share a TLS PKI.
+tokio-rustls = { workspace = true }
+rustls = { workspace = true }
+rustls-pemfile = { workspace = true }
+# Security fix: RUSTSEC-2026-0099, RUSTSEC-2026-0098, RUSTSEC-2026-0049
+# Direct dependency to force upgrade of transitive rustls-webpki
+rustls-webpki = { workspace = true }
+# Peer-cert SAN/CN extraction for the `peer_san_or_cn` helper. Pinned in
+# step with the workspace lockfile to keep the reproducibility posture.
+x509-parser = "=0.16.0"
+
+[features]
+default = []
+# Opt-out that allows `RaftNode::new`/`from_config` to construct a node without
+# a cluster secret. Intended for tests, demos, and development tooling only —
+# never for production. When this feature is NOT enabled, `RaftNode::new`
+# followed by `require_cluster_secret_for_production()` (called from
+# `from_config` under the same `cfg`) will refuse to yield a node that has no
+# HMAC key configured.
+insecure-no-cluster-secret = []
+
+[dev-dependencies]
+tempfile = "3"
+rcgen = { workspace = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "sync", "time"] }
