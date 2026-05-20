@@ -1,0 +1,29 @@
+[package]
+name = "craton-hsm-pkcs11"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "PKCS#11 hardware HSM passthrough backend for Craton HSM"
+rust-version = "1.75"
+readme = "README.md"
+keywords = ["hsm", "pkcs11", "cryptography", "fips", "security"]
+categories = ["cryptography", "hardware-support", "api-bindings"]
+
+[dependencies]
+craton-hsm = { workspace = true }
+cryptoki = "0.7"
+# RSA private-key parsing for CRT-component import templates (real PKCS#11
+# tokens — Luna, nShield, CloudHSM — reject CKA_VALUE for RSA private keys).
+rsa = { version = "0.9", features = ["sha2"] }
+sha2 = "=0.10.9"
+tracing = "0.1"
+parking_lot = "0.12"
+zeroize = "1"
+# W2 audit fix: opaque per-session token (16 bytes) keyed off OsRng so that
+# downstream maps (PoolGcmCounters, PoolCtrCounters, KeyFingerprint) cannot
+# alias across logout/login cycles where cryptoki ObjectHandles can repeat.
+rand = { workspace = true }
+
+[dev-dependencies]
+hex = "0.4"

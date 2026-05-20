@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: BUSL-1.1
+# Copyright 2026 Craton Software Company
+#
+# cargo-fuzz package for the aws-lc-rs backend. See `fuzz/README.md` for
+# how to run these locally. These targets are deliberately excluded from
+# normal CI — they're run on a separate OSS-Fuzz / nightly-fuzz job.
+
+[package]
+name = "craton-hsm-awslc-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+craton-hsm = { path = "../../craton-hsm-core", package = "craton-hsm" }
+craton-hsm-awslc = { path = ".." }
+
+[[bin]]
+name = "aes_gcm_decrypt"
+path = "fuzz_targets/aes_gcm_decrypt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rsa_verify"
+path = "fuzz_targets/rsa_verify.rs"
+test = false
+doc = false
+bench = false
+
+# Fuzz targets often trigger dead-code warnings for the unused standard
+# test-harness machinery. Silence them so `cargo fuzz build` stays clean.
+[workspace]

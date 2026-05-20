@@ -1,0 +1,12 @@
+# Default owners for everything
+* @craton-co/core-team
+
+# Security-critical paths require security team review
+craton-hsm-auth/ @craton-co/core-team @craton-co/security
+craton-hsm-certified/ @craton-co/core-team @craton-co/security
+craton-hsm-awslc/ @craton-co/core-team @craton-co/security
+craton-hsm-openssl/ @craton-co/core-team @craton-co/security
+craton-hsm-pkcs11/ @craton-co/core-team @craton-co/security
+
+# CI/CD changes
+.github/ @craton-co/core-team
