@@ -45,7 +45,7 @@ hex = { workspace = true }
 arc-swap = { workspace = true }
 # Audit fix (perf, ldap pool): bounded multi-producer/multi-consumer
 # queue used to replace the two-pass try_lock pool sweep.
-crossbeam-queue = "=0.3.11"
+crossbeam-queue = "=0.3.12"
 
 # Optional auth dependencies
 ldap3 = { version = "0.11", optional = true }
