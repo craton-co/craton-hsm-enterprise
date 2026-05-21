@@ -55,7 +55,7 @@ jsonwebtoken = { version = "9", optional = true }
 # memory-safe, FIPS-friendly TLS stack regardless of what other crates in the
 # workspace enable via feature unification.
 reqwest = { version = "0.12", features = ["blocking", "json", "rustls-tls"], optional = true, default-features = false }
-x509-parser = { version = "0.16", optional = true, features = ["verify"] }
+x509-parser = { version = "0.18", optional = true, features = ["verify"] }
 # Note: p256 is intentionally NOT listed here. It is used only by the
 # `#[cfg(test)]` self-signed certificate builders in `auth/cert.rs`; the
 # production code path never imports it. It is therefore declared only

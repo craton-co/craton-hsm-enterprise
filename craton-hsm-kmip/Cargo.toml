@@ -32,7 +32,7 @@ tokio-rustls.workspace = true
 smallvec = "^1.15"
 # W1: shared `peer_san_or_cn` helper. Duplicates the cluster crate's
 # implementation by design — see `craton_hsm_cluster::replication::peer_san_or_cn`.
-x509-parser = "^0.16"
+x509-parser = "^0.18"
 
 [features]
 default = []
