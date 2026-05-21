@@ -93,7 +93,7 @@ rustls = { version = "=0.23.18", default-features = false, features = ["ring", "
 rustls-pemfile = "=2.2.0"
 webpki-roots = "=0.26.7"
 rcgen = "=0.13.1"
-serial_test = "=3.1.1"
+serial_test = "=3.4.0"
 # Pin toml to 0.8.x to avoid edition2024 requirement in 1.1.0+spec-1.1.0
 # which is not available in Rust 1.75.0 (MSRV)
 toml = "=0.8.19"
