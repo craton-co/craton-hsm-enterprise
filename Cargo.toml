@@ -77,7 +77,7 @@ subtle = "=2.6.1"
 parking_lot = "=0.12.3"
 hkdf = "=0.12.4"
 hex = "=0.4.3"
-memchr = "=2.7.4"
+memchr = "=2.8.0"
 smallvec = "=1.15.1"
 # Security fix: RUSTSEC-2026-0002 (IterMut stacked-borrows soundness) lands in 0.16.3.
 lru = "=0.16.3"
