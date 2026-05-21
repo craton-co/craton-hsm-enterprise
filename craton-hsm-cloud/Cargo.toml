@@ -51,7 +51,7 @@ subtle = "=2.6.1"
 parking_lot = "=0.12.3"
 sha2 = "=0.10.9"
 hmac = "=0.12.1"
-hkdf = "=0.12.4"
+hkdf = "=0.13.0"
 rand = { workspace = true }
 zeroize = { version = "=1.8.1", features = ["derive"] }
 
