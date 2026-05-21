@@ -34,7 +34,7 @@ rsa = { version = "0.9", features = ["sha2"] }
 p256 = { version = "0.13", features = ["ecdh", "ecdsa"] }
 p384 = { version = "0.13", features = ["ecdh", "ecdsa"] }
 ed25519-dalek = { version = "2", features = ["rand_core"] }
-hmac = "0.12"
+hmac = "0.13"
 sha2 = "0.10"
 subtle = "2"
 
