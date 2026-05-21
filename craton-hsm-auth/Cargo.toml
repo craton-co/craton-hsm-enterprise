@@ -38,7 +38,7 @@ hmac = "=0.12.1"
 base64 = "=0.22.1"
 subtle = "=2.6.1"
 rand = { workspace = true }
-pbkdf2 = { version = "=0.12.2", features = ["hmac"] }
+pbkdf2 = { version = "=0.13.0", features = ["hmac"] }
 parking_lot = "=0.12.3"
 # Audit-fix shared workspace deps used by this crate.
 hex = { workspace = true }
