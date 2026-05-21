@@ -26,7 +26,7 @@ dashmap = "6"
 zeroize = "1"
 subtle = "2"
 hmac = "=0.12.1"
-parking_lot = "=0.12.3"
+parking_lot = "=0.12.5"
 # Used by the atomic write-temp-then-rename path in
 # `gcm_counter::flush_body_to_disk` to guarantee the journal is never observed
 # in a half-written state on crash. Runtime (not test-only) requirement — see
