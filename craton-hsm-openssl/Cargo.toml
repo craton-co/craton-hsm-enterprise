@@ -25,7 +25,7 @@ hkdf = "0.12"
 dashmap = "6"
 zeroize = "1"
 subtle = "2"
-hmac = "=0.12.1"
+hmac = "=0.13.0"
 parking_lot = "=0.12.3"
 # Used by the atomic write-temp-then-rename path in
 # `gcm_counter::flush_body_to_disk` to guarantee the journal is never observed
