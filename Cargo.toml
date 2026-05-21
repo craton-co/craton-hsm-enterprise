@@ -89,7 +89,7 @@ arc-swap = "=1.7.1"
 # TODO: standardize on aws-lc-rs rustls provider (currently `ring`); migrate
 # in a follow-up RFC once aws-lc-rs default-provider parity lands.
 tokio-rustls = { version = "=0.26.0", default-features = false, features = ["ring", "tls12"] }
-rustls = { version = "=0.23.18", default-features = false, features = ["ring", "std", "tls12"] }
+rustls = { version = "=0.23.40", default-features = false, features = ["ring", "std", "tls12"] }
 rustls-pemfile = "=2.2.0"
 webpki-roots = "=0.26.7"
 rcgen = "=0.13.1"
