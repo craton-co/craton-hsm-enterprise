@@ -12,7 +12,7 @@ categories = ["cryptography", "hardware-support", "api-bindings"]
 
 [dependencies]
 craton-hsm = { workspace = true }
-cryptoki = "0.7"
+cryptoki = "0.12"
 # RSA private-key parsing for CRT-component import templates (real PKCS#11
 # tokens — Luna, nShield, CloudHSM — reject CKA_VALUE for RSA private keys).
 rsa = { version = "0.9", features = ["sha2"] }
