@@ -72,7 +72,7 @@ dashmap = "=6.1.0"
 rand = "=0.8.6"
 tempfile = "=3.19.1"
 hmac = "=0.12.1"
-zeroize = { version = "=1.8.1", features = ["derive"] }
+zeroize = { version = "=1.8.2", features = ["derive"] }
 subtle = "=2.6.1"
 parking_lot = "=0.12.3"
 hkdf = "=0.12.4"
