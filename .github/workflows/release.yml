@@ -86,7 +86,7 @@ jobs:
           ls -la dist/
 
       - name: Install Syft (SBOM generator)
-        uses: anchore/sbom-action/download-syft@61119d458adab75f756bc0b9e4bde25725f86a7a # v0.17.7
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.17.7
 
       - name: Generate SBOMs (SPDX + CycloneDX)
         run: |
