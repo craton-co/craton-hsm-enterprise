@@ -31,7 +31,7 @@ parking_lot = "=0.12.3"
 # `gcm_counter::flush_body_to_disk` to guarantee the journal is never observed
 # in a half-written state on crash. Runtime (not test-only) requirement — see
 # the gcm_counter.rs file header.
-tempfile = "=3.19.1"
+tempfile = "=3.27.0"
 
 [target.'cfg(windows)'.dependencies]
 # Used to call `GetFileInformationByHandle` for a stable file-identity tuple
