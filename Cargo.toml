@@ -54,7 +54,7 @@ categories = ["cryptography", "hardware-support", "authentication"]
 # `[patch.crates-io]` entry in `.cargo/config.toml` (gitignored) rather than
 # editing this manifest, so the resulting Cargo.lock that is committed is
 # always reproducible from crates.io.
-craton-hsm = { version = "=0.9.2", package = "craton-hsm" }
+craton-hsm = { version = "=0.11.0", package = "craton-hsm" }
 # NOTE on `ml-dsa`: `craton-hsm` 0.9.2 imports the `KeyGen` trait
 # (`MlDsa44::key_gen`, `from_seed`) that ml-dsa 0.1.0-rc.9 still exposes,
 # but the 0.1.0 final release dropped — only `SigningKey::from_seed`
